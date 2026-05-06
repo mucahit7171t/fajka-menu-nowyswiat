@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Save, Loader2, Phone, Globe, Plus, Trash2 } from "lucide-react";
+import { Save, Loader2, Phone, Globe, Plus, Trash2, Clock } from "lucide-react";
 import { useSettingsStore } from "@/store/settingsStore";
 import toast from "react-hot-toast";
 
@@ -13,11 +13,28 @@ type Notice = {
   isActive: boolean;
 };
 
+type OpeningHour = {
+  day: string;
+  label: string;
+};
+
+const defaultOpeningHours: OpeningHour[] = [
+  { day: "Monday", label: "04:00 PM - 03:00 AM" },
+  { day: "Tuesday", label: "04:00 PM - 03:00 AM" },
+  { day: "Wednesday", label: "04:00 PM - 04:00 AM" },
+  { day: "Thursday", label: "04:00 PM - 04:00 AM" },
+  { day: "Friday", label: "02:00 PM - 05:00 AM" },
+  { day: "Saturday", label: "02:00 PM - 05:00 AM" },
+  { day: "Sunday", label: "03:00 PM - 04:00 AM" },
+];
+
 export default function SettingsPage() {
   const { settings, loading, fetchSettings, updateSetting } = useSettingsStore();
 
   const [phone, setPhone] = useState("");
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [openingHours, setOpeningHours] =
+    useState<OpeningHour[]>(defaultOpeningHours);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -26,6 +43,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setPhone(settings.phone || "+48 000 000 000");
+
+    if (Array.isArray(settings.openingHours) && settings.openingHours.length > 0) {
+      setOpeningHours(settings.openingHours);
+    } else {
+      setOpeningHours(defaultOpeningHours);
+    }
 
     if (Array.isArray(settings.notices)) {
       setNotices(
@@ -69,6 +92,19 @@ export default function SettingsPage() {
     setNotices(updated);
   };
 
+  const updateOpeningHour = (
+    index: number,
+    field: keyof OpeningHour,
+    value: string
+  ) => {
+    const updated = [...openingHours];
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+    setOpeningHours(updated);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -83,6 +119,7 @@ export default function SettingsPage() {
 
       await updateSetting("phone", phone);
       await updateSetting("notices", normalizedNotices);
+      await updateSetting("openingHours", openingHours);
 
       toast.success("Settings updated successfully", { id: loadingToast });
     } catch (error) {
@@ -140,6 +177,52 @@ export default function SettingsPage() {
                 placeholder="+48 000 000 000"
                 className="w-full bg-white/5 border border-white/5 rounded-2xl py-6 px-8 text-lg font-serif italic text-white focus:border-[#c8a24a] transition-all outline-none"
               />
+            </div>
+
+            <div className="h-px bg-white/5 w-full" />
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#c8a24a]/10 flex items-center justify-center text-[#c8a24a] border border-[#c8a24a]/20">
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white uppercase tracking-tight">
+                    Opening Hours
+                  </h3>
+                  <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-0.5">
+                    Edit opening hours shown on customer menu
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {openingHours.map((item, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"
+                  >
+                    <input
+                      type="text"
+                      value={item.day}
+                      onChange={(e) =>
+                        updateOpeningHour(index, "day", e.target.value)
+                      }
+                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-bold outline-none focus:border-[#c8a24a]/60"
+                    />
+
+                    <input
+                      type="text"
+                      value={item.label}
+                      onChange={(e) =>
+                        updateOpeningHour(index, "label", e.target.value)
+                      }
+                      placeholder="04:00 PM - 03:00 AM"
+                      className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white font-bold outline-none focus:border-[#c8a24a]/60"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="h-px bg-white/5 w-full" />
@@ -249,7 +332,7 @@ export default function SettingsPage() {
           <Globe size={24} />
         </div>
         <p className="text-[11px] text-white/50 leading-relaxed font-medium uppercase tracking-wider">
-          Pro Tip: Notices appear in the customer menu under the UWAGA section.
+          Pro Tip: Notices and opening hours appear in the customer menu.
         </p>
       </div>
     </div>

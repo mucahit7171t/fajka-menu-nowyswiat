@@ -34,10 +34,28 @@ type Notice = {
   isActive: boolean;
 };
 
+type OpeningHour = {
+  day: string;
+  label: string;
+};
+
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
   const [lang, setLang] = useState<Lang>("pl");
+
+  const defaultOpeningHours: OpeningHour[] = [
+    { day: "Monday", label: "04:00 PM - 03:00 AM" },
+    { day: "Tuesday", label: "04:00 PM - 03:00 AM" },
+    { day: "Wednesday", label: "04:00 PM - 04:00 AM" },
+    { day: "Thursday", label: "04:00 PM - 04:00 AM" },
+    { day: "Friday", label: "02:00 PM - 05:00 AM" },
+    { day: "Saturday", label: "02:00 PM - 05:00 AM" },
+    { day: "Sunday", label: "03:00 PM - 04:00 AM" },
+  ];
+
+  const [openingHours, setOpeningHours] =
+    useState<OpeningHour[]>(defaultOpeningHours);
 
   const getText = (value: LocalizedText) => {
     return value?.[lang] || value?.pl || value?.en || "";
@@ -95,6 +113,10 @@ export default function Home() {
               .sort((a: Notice, b: Notice) => a.order - b.order)
           );
         }
+
+        if (Array.isArray(data.openingHours) && data.openingHours.length > 0) {
+          setOpeningHours(data.openingHours);
+        }
       } catch (error) {
         console.error("SETTINGS LOAD ERROR:", error);
         setNotices([]);
@@ -105,16 +127,6 @@ export default function Home() {
   }, []);
 
   const defaultProductImage = "/product-default.jpg";
-
-  const openingHours = [
-    { day: "Monday", label: "04:00 PM - 03:00 AM" },
-    { day: "Tuesday", label: "04:00 PM - 03:00 AM" },
-    { day: "Wednesday", label: "04:00 PM - 04:00 AM" },
-    { day: "Thursday", label: "04:00 PM - 04:00 AM" },
-    { day: "Friday", label: "02:00 PM - 05:00 AM" },
-    { day: "Saturday", label: "02:00 PM - 05:00 AM" },
-    { day: "Sunday", label: "03:00 PM - 04:00 AM" },
-  ];
 
   return (
     <main className="min-h-screen bg-[#5f6168] px-1 py-3 text-black sm:px-3 sm:py-6">
@@ -218,13 +230,6 @@ export default function Home() {
                   {getText(category.title)}
                 </a>
               ))}
-
-              <a
-                href="#contact"
-                className="whitespace-nowrap rounded-full border border-black/15 bg-white px-3 py-2 text-[11px] font-bold text-black"
-              >
-                Contact
-              </a>
             </div>
           </section>
 
@@ -381,14 +386,6 @@ export default function Home() {
           </section>
 
           <section className="px-4 pb-8 text-center">
-            <p
-              className="mx-auto max-w-[290px] text-[14px] font-semibold leading-5"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              {lang === "pl"
-                ? "W weekendy i święta do każdego rachunku doliczamy 10% opłaty serwisowej."
-                : "On weekends and holidays, a 10% service charge is added to every bill."}
-            </p>
 
             <a
               href="#top"
@@ -397,19 +394,6 @@ export default function Home() {
             >
               <span className="text-[24px] leading-none">↑</span>
               <span className="text-[22px] font-bold">Main Menu</span>
-            </a>
-
-            <a
-              href="https://maps.google.com/?q=Żurawia+22+Warszawa"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 block overflow-hidden rounded-[10px] border border-black/10 bg-white shadow-sm"
-            >
-              <div className="flex aspect-[4/3] items-center justify-center bg-[linear-gradient(135deg,#dfe7ef,#f8f8f8,#dcdcdc)] text-center text-[14px] font-semibold text-black/60">
-                {lang === "pl"
-                  ? "Dotknij, aby otworzyć mapę"
-                  : "Tap for map & directions"}
-              </div>
             </a>
 
             <div className="mt-7">
@@ -439,58 +423,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div
-              id="contact"
-              className="mt-8 space-y-1 text-[16px] font-bold leading-8"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              <p className="text-[18px]">
-                {lang === "pl" ? "Kontakt" : "Get in Touch!"}
-              </p>
-              <p>Fajka Bar</p>
-              <p>Żurawia 22, 00-515</p>
-              <p>Warszawa</p>
-            </div>
-
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <a
-                href="tel:+48000000000"
-                className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-white px-5 py-3 text-[15px] font-bold shadow-sm"
-              >
-                <span>📞</span>
-                <span>{lang === "pl" ? "Zadzwoń" : "Call Us"}</span>
-              </a>
-
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-3"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 text-xl text-white shadow-sm">
-                  ◎
-                </div>
-                <span
-                  className="text-[20px] font-bold underline"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  Fajka bar
-                </span>
-              </a>
-
-              <a
-                href="https://maps.google.com/?q=Żurawia+22+Warszawa"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-3 rounded-full border border-black/15 bg-black px-5 py-3 text-[15px] font-bold text-white shadow-sm"
-              >
-                <span>📍</span>
-                <span>
-                  {lang === "pl" ? "Jak dojechać" : "Get Directions"}
-                </span>
-              </a>
             </div>
           </section>
         </div>
