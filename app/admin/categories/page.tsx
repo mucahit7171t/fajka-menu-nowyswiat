@@ -6,7 +6,6 @@ import { Plus, Trash2, Edit3, Loader2, FolderPlus } from "lucide-react";
 import { useMenuStore } from "@/store/menuStore";
 import toast from "react-hot-toast";
 
-// Import Modals
 import CategoryModal from "@/components/admin/CategoryModal";
 import SubcategoryModal from "@/components/admin/SubcategoryModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
@@ -35,17 +34,29 @@ export default function CategoriesPage() {
     fetchMenu(true);
   }, [fetchMenu]);
 
+  const getCategoryId = (cat: any) => {
+    return cat._id || cat.id || cat.anchorId;
+  };
+
   const handleSave = async (data: any) => {
     const { type, mode, data: initialData } = modalState;
     const loadingToast = toast.loading(`Saving ${type}...`);
+
     try {
       if (type === "category") {
-        if (mode === "add") await createCategory(data);
-        else await updateCategory(initialData._id, data);
+        if (mode === "add") {
+          await createCategory(data);
+        } else {
+          await updateCategory(getCategoryId(initialData), data);
+        }
       } else if (type === "subcategory") {
-        if (mode === "add") await createSubcategory(data);
-        else await updateSubcategory(initialData._id, data);
+        if (mode === "add") {
+          await createSubcategory(data);
+        } else {
+          await updateSubcategory(initialData._id || initialData.id, data);
+        }
       }
+
       toast.success(`${type} saved successfully`, { id: loadingToast });
       setModalState({ type: null, mode: null, data: null });
     } catch (error) {
@@ -56,9 +67,14 @@ export default function CategoriesPage() {
   const handleDelete = async () => {
     const { data } = modalState;
     const loadingToast = toast.loading(`Deleting ${data.type}...`);
+
     try {
-      if (data.type === "category") await deleteCategory(data.id);
-      else if (data.type === "subcategory") await deleteSubcategory(data.id);
+      if (data.type === "category") {
+        await deleteCategory(data.id);
+      } else if (data.type === "subcategory") {
+        await deleteSubcategory(data.id);
+      }
+
       toast.success(`${data.type} deleted`, { id: loadingToast });
       setModalState({ type: null, mode: null, data: null });
     } catch (error) {
@@ -88,6 +104,7 @@ export default function CategoriesPage() {
             <FolderPlus size={16} />
             New Subcategory
           </button>
+
           <button
             onClick={() =>
               setModalState({ type: "category", mode: "add", data: null })
@@ -113,128 +130,142 @@ export default function CategoriesPage() {
         </div>
       ) : (
         <div className="grid gap-6">
-          {menu.map((cat, i) => (
-            <motion.div
-              key={cat._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="group p-4 md:p-8 bg-bg-card border border-white/5 hover:border-white/20 rounded-2xl md:rounded-[3rem] transition-all"
-            >
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-6">
-                <div className="flex items-center gap-6">
-                  {cat.image ? (
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shrink-0">
-                      <img
-                        src={cat.image}
-                        alt={cat.title.en}
-                        className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                      />
+          {menu.map((cat: any, i: number) => {
+            const categoryId = getCategoryId(cat);
+
+            return (
+              <motion.div
+                key={categoryId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="group p-4 md:p-8 bg-bg-card border border-white/5 hover:border-white/20 rounded-2xl md:rounded-[3rem] transition-all"
+              >
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-6">
+                  <div className="flex items-center gap-6">
+                    {cat.image ? (
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shrink-0">
+                        <img
+                          src={cat.image}
+                          alt={cat.title?.en || cat.title?.pl || "Category"}
+                          className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-white/10 uppercase font-black text-[8px]">
+                        No Img
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="text-2xl font-bold tracking-tight text-white">
+                        {cat.title?.pl} / {cat.title?.en}
+                      </h3>
+
+                      <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-1">
+                        ID:{" "}
+                        <span className="text-white/40">
+                          {cat.anchorId || cat.id || cat._id}
+                        </span>{" "}
+                        • Order:{" "}
+                        <span className="text-white/40">{cat.order || 0}</span>
+                      </p>
                     </div>
-                  ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-white/10 uppercase font-black text-[8px]">
-                      No Img
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-2xl font-bold tracking-tight text-white">
-                      {cat.title.pl} / {cat.title.en}
-                    </h3>
-                    <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-1">
-                      ID: <span className="text-white/40">{cat.anchorId}</span>{" "}
-                      • Order:{" "}
-                      <span className="text-white/40">{cat.order}</span>
-                    </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  <ActionButton
-                    icon={<Edit3 size={18} />}
-                    onClick={() =>
-                      setModalState({
-                        type: "category",
-                        mode: "edit",
-                        data: cat,
-                      })
-                    }
-                  />
-                  <button
-                    onClick={() =>
-                      setModalState({
-                        type: "delete",
-                        mode: null,
-                        data: {
-                          id: cat._id,
-                          name: cat.title.en,
+
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                    <ActionButton
+                      icon={<Edit3 size={18} />}
+                      onClick={() =>
+                        setModalState({
                           type: "category",
-                        },
-                      })
-                    }
-                    className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-500/50 hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
+                          mode: "edit",
+                          data: cat,
+                        })
+                      }
+                    />
 
-              {/* Subcategories inside categories */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {cat.subcategories.map((sub: any) => (
-                  <div
-                    key={sub._id}
-                    className="flex items-center justify-between p-3.5 md:p-5 bg-white/5 rounded-xl md:rounded-2xl group/sub border border-transparent hover:border-white/10 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#c8a24a]/40 group-hover/sub:bg-[#c8a24a] transition-colors" />
-                      <span className="text-sm font-bold text-white/60 group-hover/sub:text-white transition-colors uppercase tracking-widest">
-                        {sub.title.en}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 translate-x-2 group-hover/sub:translate-x-0 transition-all">
-                      <button
-                        onClick={() =>
-                          setModalState({
-                            type: "subcategory",
-                            mode: "edit",
-                            data: sub,
-                          })
-                        }
-                        className="p-2 text-white/20 hover:text-blue-400 transition-colors"
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setModalState({
-                            type: "delete",
-                            mode: null,
-                            data: {
-                              id: sub._id,
-                              name: sub.title.en,
-                              type: "subcategory",
-                            },
-                          })
-                        }
-                        className="p-2 text-white/20 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() =>
+                        setModalState({
+                          type: "delete",
+                          mode: null,
+                          data: {
+                            id: categoryId,
+                            name: cat.title?.en || cat.title?.pl || "Category",
+                            type: "category",
+                          },
+                        })
+                      }
+                      className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-500/50 hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                ))}
+                </div>
 
-                {cat.subcategories.length === 0 && (
-                  <p className="text-white/5 text-[10px] uppercase font-black tracking-widest italic py-4">
-                    No subcategories created for this section
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(cat.subcategories || []).map((sub: any) => (
+                    <div
+                      key={sub._id || sub.id}
+                      className="flex items-center justify-between p-3.5 md:p-5 bg-white/5 rounded-xl md:rounded-2xl group/sub border border-transparent hover:border-white/10 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#c8a24a]/40 group-hover/sub:bg-[#c8a24a] transition-colors" />
+                        <span className="text-sm font-bold text-white/60 group-hover/sub:text-white transition-colors uppercase tracking-widest">
+                          {sub.title?.en || sub.title?.pl}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 translate-x-2 group-hover/sub:translate-x-0 transition-all">
+                        <button
+                          onClick={() =>
+                            setModalState({
+                              type: "subcategory",
+                              mode: "edit",
+                              data: sub,
+                            })
+                          }
+                          className="p-2 text-white/20 hover:text-blue-400 transition-colors"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            setModalState({
+                              type: "delete",
+                              mode: null,
+                              data: {
+                                id: sub._id || sub.id,
+                                name:
+                                  sub.title?.en ||
+                                  sub.title?.pl ||
+                                  "Subcategory",
+                                type: "subcategory",
+                              },
+                            })
+                          }
+                          className="p-2 text-white/20 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(!cat.subcategories || cat.subcategories.length === 0) && (
+                    <p className="text-white/5 text-[10px] uppercase font-black tracking-widest italic py-4">
+                      No subcategories created for this section
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
-      {/* Modals */}
       <CategoryModal
         isOpen={modalState.type === "category"}
         onClose={() => setModalState({ type: null, mode: null, data: null })}
